@@ -1,0 +1,70 @@
+
+SlackToken   = "__REPLACE_WITH_TOKEN"; 
+DASH_Server  = "https://REPLACE_WITH_SERVER_FQDN_OR_IP:16311/ibm/console";
+ 
+HTTPPort=443;
+Protocol="https";
+ChannelKey=""; 
+Method="POST";
+AuthHandlerActionTreeName="";
+FormParameters=null;
+FilesToSend=null;
+HeadersToSend=null;
+HTTPHost="slack.com";
+Path="/api/chat.postMessage";     
+HttpProperties=NewObject();
+HttpProperties.ContentType="application/x-www-form-urlencoded";
+
+SlackChannel = "general";
+SlackNode    = @Node;
+SlackTime    = LocalTime(@LastOccurrence, "EEE MMM dd HH:mm:ss yyyy");
+SlackMessage = replace(@Summary,'"','');
+
+if (@Severity == 0 ) { SlackSeverity = "Clear";         SlackColour = "#00FF00"; PreText = "*Clearing alert*"; } elseif
+   (@Severity == 1 ) { SlackSeverity = "Indeterminate"; SlackColour = "#808080"; PreText = "*Information*";    } elseif
+   (@Severity == 2 ) { SlackSeverity = "Warning";       SlackColour = "#00FFFF"; PreText = "*Alert*";          } elseif
+   (@Severity == 3 ) { SlackSeverity = "Minor";         SlackColour = "#FFFF00"; PreText = "*Alert*";          } elseif 
+   (@Severity == 4 ) { SlackSeverity = "Major";         SlackColour = "#FFA500"; PreText = "*Alert*";          } elseif
+   (@Severity == 5 ) { SlackSeverity = "Critical";      SlackColour = "#FF0000"; PreText = "*Alert*";          } else 
+                     { SlackSeverity = "Indeterminate"; SlackColour = "#808080"; PreText = "*Information*";    }
+ 
+if (@Acknowledged == 0) { SlackAcked   = 'False'; }                   else { SlackAcked = 'True';}
+
+SlackSerial = @Serial; // Need to use local variables so that Impact will not try to update them fields after we pass them as parameters.
+SlackIdentifier = @Identifier;  // Need to use local variables so that Impact will not try to update them after we pass them as parameters.
+
+SlackPayload =  
+"mrkdwn=true&username=Omnibus&icon_emoji=:itsm:&text=" + PreText + " on " +
+            SlackNode + "&" ;
+ 
+Attachments = "attachments=[ { \"color\":\"" + SlackColour +  "\",\"ts\":" + @LastOccurrence + ",\"text\": \"" +  
+            "\" , \"mrkdwn_in\": [\"text\"], \"fields\": [ " + 
+            "{\"title\": \"Alert Summary" + " (Serial #" + SlackSerial + ")" + ClassText + "\" ,\"value\": \"" + 
+            SlackMessage  + "\",\"short\": false}" +  
+
+  "]}] " ; 
+// Post the main body 
+
+
+payload = "token=" + SlackToken + "&channel=" + slackChannel + "&" + slackPayload ;
+HttpProperties.Content=( payload ); 
+Log( HttpProperties);
+rawResult=GetHTTP(HTTPHost, HTTPPort, Protocol, Path, ChannelKey, Method, AuthHandlerActionTreeName, FormParameters, FilesToSend,
+		  HeadersToSend, HttpProperties);
+
+
+Log (ThePage);// "ThePage" is useful for diagnosing http errors
+Log (ResultCode);// -> Status Code associated with HTTP call
+Log (HeadersSent); // -> Http Request Headers
+Log (HeadersReceived);// -> Http Response Headers 
+Log (ErrorReason);// -> Returns the status text associated with the latest response.
+result = ParseJSON(rawResult); 
+Log(result); 
+
+Log("----------------------------------------------------------"); 
+
+slackResultCode = ResultCode;
+
+
+@Slack = 2;
+ReturnEvent(EventContainer); 

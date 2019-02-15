@@ -1,0 +1,32 @@
+SlackToken   = "__YOUR_TOKEN_HERE___"; 
+SlackChannel = "general";
+SlackPayload = "text=hello world";
+ 
+HTTPPort=443;
+Protocol="https";
+ChannelKey=""; 
+Method="POST";
+AuthHandlerActionTreeName="";
+FormParameters=null;
+FilesToSend=null;
+HeadersToSend=null;
+HTTPHost="slack.com";
+Path="/api/chat.postMessage";     
+HttpProperties=NewObject();
+HttpProperties.ContentType="application/x-www-form-urlencoded";
+payload = "token=" + SlackToken + "&channel=" + SlackChannel + "&" + SlackPayload ;
+HttpProperties.Content=( payload ); 
+Log( HttpProperties);
+rawResult=GetHTTP(HTTPHost, HTTPPort, Protocol, Path, ChannelKey, Method, AuthHandlerActionTreeName, FormParameters, FilesToSend,
+           HeadersToSend, HttpProperties);
+
+
+Log (ThePage);// "ThePage" is useful for diagnosing http errors
+Log (ResultCode);// -> Status Code associated with HTTP call
+Log (HeadersSent); // -> Http Request Headers
+Log (HeadersReceived);// -> Http Response Headers 
+Log (ErrorReason);// -> Returns the status text associated with the latest response.
+result = ParseJSON(rawResult); 
+Log(result); 
+
+Log("----------------------------------------------------------"); 
